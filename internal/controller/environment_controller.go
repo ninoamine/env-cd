@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	corev1alpha1 "github.com/ninoamine/env-cd/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 // EnvironmentReconciler reconciles a Environment object
@@ -47,10 +48,23 @@ type EnvironmentReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
 func (r *EnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
+	var environment corev1alpha1.Environment
+	if err := r.Get(ctx, req.NamespacedName, &environment); err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("Envronment deleted", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Failed to get Environment")
+		return ctrl.Result{}, err
+	}
+	
+	logger.Info("Reconciling Environment", 
+		"name", environment.Name, 
+		"namespace", environment.Namespace, 
+		"status", environment.Status.Status,
+	)
 	return ctrl.Result{}, nil
 }
 
