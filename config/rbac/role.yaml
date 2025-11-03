@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - core.envcd.io
+  resources:
+  - environments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - core.envcd.io
+  resources:
+  - environments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - core.envcd.io
+  resources:
+  - environments/status
+  verbs:
+  - get
+  - patch
+  - update
