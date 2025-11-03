@@ -7,4 +7,14 @@ layout:
 - go.kubebuilder.io/v4
 projectName: env-cd
 repo: github.com/ninoamine/env-cd
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: envcd.io
+  group: core
+  kind: Environment
+  path: github.com/ninoamine/env-cd/api/v1alpha1
+  version: v1alpha1
 version: "3"
