@@ -38,6 +38,20 @@ spec:
             type: object
           spec:
             description: EnvironmentSpec defines the desired state of Environment.
+            properties:
+              databases:
+                description: object of the databases to be created in the environment
+                properties:
+                  postgresqls:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                type: object
             type: object
           status:
             description: EnvironmentStatus defines the observed state of Environment.
