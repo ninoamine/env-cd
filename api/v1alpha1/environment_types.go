@@ -28,15 +28,24 @@ type EnvironmentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Environment. Edit environment_types.go to remove/update
-	// Name string `json:"name,omitempty"`
+	// object of the databases to be created in the environment
+	Databases DatabaseSpec `json:"databases,omitempty"`
+}
+
+type DatabaseSpec struct {
+	Postgresql []PostgresqlsDatabase `json:"postgresqls,omitempty"`
+}
+
+type PostgresqlsDatabase struct {
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
 }
 
 // EnvironmentStatus defines the observed state of Environment.
 type EnvironmentStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	Status string `json:"status,omitempty"`
+	Status  string   `json:"status,omitempty"`
+	Message string   `json:"message,omitempty"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 // +kubebuilder:object:root=true
