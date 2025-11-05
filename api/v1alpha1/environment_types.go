@@ -32,9 +32,8 @@ type EnvironmentSpec struct {
 	Databases DatabaseSpec `json:"databases,omitempty"`
 }
 
-
 type DatabaseSpec struct {
-	Postgesql []PostgresqlsDatabase `json:"postgresqls,omitempty"`
+	Postgresql []PostgresqlsDatabase `json:"postgresqls,omitempty"`
 }
 
 type PostgresqlsDatabase struct {
@@ -44,9 +43,9 @@ type PostgresqlsDatabase struct {
 
 // EnvironmentStatus defines the observed state of Environment.
 type EnvironmentStatus struct {
-	Status string `json:"status,omitempty"`
-	Message string `json:"message,omitempty"`
-	Errors []string `json:"errors,omitempty"`
+	Status  string   `json:"status,omitempty"`
+	Message string   `json:"message,omitempty"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 // +kubebuilder:object:root=true

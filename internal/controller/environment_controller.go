@@ -24,8 +24,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"fmt"
 	corev1alpha1 "github.com/ninoamine/env-cd/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EnvironmentReconciler reconciles a Environment object
@@ -65,6 +68,59 @@ func (r *EnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		"namespace", environment.Namespace,
 		"status", environment.Status.Status,
 	)
+
+	// Réinitialise les erreurs avant reconciliation
+	environment.Status.Errors = []string{}
+
+	hasError := false
+
+	for _, pg := range environment.Spec.Databases.Postgresql {
+		logger.Info("Postgresql Database to be created",
+			"database_name", pg.Name,
+		)
+
+		db := &corev1alpha1.PostgresqlDatabase{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      pg.Name,
+				Namespace: req.Namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					*metav1.NewControllerRef(&environment, corev1alpha1.GroupVersion.WithKind("Environment")),
+				},
+			},
+			Spec: corev1alpha1.PostgresqlDatabaseSpec{
+				Name: pg.Name,
+			},
+		}
+
+		err := r.Create(ctx, db)
+		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				logger.Info("PostgresqlDatabase already exists", "database_name", pg.Name)
+				environment.Status.Errors = append(environment.Status.Errors, fmt.Sprintf("PostgresqlDatabase %s already exists", pg.Name))
+			} else {
+				logger.Error(err, "Failed to create PostgresqlDatabase", "database_name", pg.Name)
+				environment.Status.Errors = append(environment.Status.Errors, fmt.Sprintf("Failed to create PostgresqlDatabase %s: %v", pg.Name, err))
+			}
+			hasError = true
+			continue
+		}
+
+		logger.Info("PostgresqlDatabase created successfully", "database_name", pg.Name)
+	}
+
+	// Mise à jour du status globale
+	if hasError {
+		environment.Status.Status = "Error"
+		environment.Status.Message = "One or more errors occurred during reconciliation"
+	} else {
+		environment.Status.Status = "Success"
+		environment.Status.Message = "Reconciliation completed successfully"
+	}
+
+	if err := r.Status().Update(ctx, &environment); err != nil {
+		logger.Error(err, "unable to update Environment status")
+	}
+
 	return ctrl.Result{}, nil
 }
 
