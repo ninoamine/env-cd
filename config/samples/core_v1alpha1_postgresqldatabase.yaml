@@ -1,0 +1,9 @@
+apiVersion: core.envcd.io/v1alpha1
+kind: PostgresqlDatabase
+metadata:
+  labels:
+    app.kubernetes.io/name: env-cd
+    app.kubernetes.io/managed-by: kustomize
+  name: postgresqldatabase-sample
+spec:
+  # TODO(user): Add fields here

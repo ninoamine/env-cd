@@ -8,6 +8,7 @@ rules:
   - core.envcd.io
   resources:
   - environments
+  - postgresqldatabases
   verbs:
   - create
   - delete
@@ -20,12 +21,14 @@ rules:
   - core.envcd.io
   resources:
   - environments/finalizers
+  - postgresqldatabases/finalizers
   verbs:
   - update
 - apiGroups:
   - core.envcd.io
   resources:
   - environments/status
+  - postgresqldatabases/status
   verbs:
   - get
   - patch

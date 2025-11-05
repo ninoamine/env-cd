@@ -44,9 +44,9 @@ type PostgresqlsDatabase struct {
 
 // EnvironmentStatus defines the observed state of Environment.
 type EnvironmentStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 	Status string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+	Errors []string `json:"errors,omitempty"`
 }
 
 // +kubebuilder:object:root=true
