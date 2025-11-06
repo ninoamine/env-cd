@@ -76,7 +76,6 @@ func (r *EnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	for _, pg := range environment.Spec.Databases.Postgresql {
 		logger.Info("Postgresql Database to be created", "database_name", pg.Name)
 
-		// ⭐ CHANGEMENT 1: Vérifier si existe avant de créer
 		found := &corev1alpha1.PostgresqlDatabase{}
 		err := r.Get(ctx, client.ObjectKey{Name: pg.Name, Namespace: req.Namespace}, found)
 
@@ -105,14 +104,12 @@ func (r *EnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			logger.Info("PostgresqlDatabase created successfully", "database_name", pg.Name)
 
 		} else if err != nil {
-			// Erreur lors du Get
 			logger.Error(err, "Failed to get PostgresqlDatabase", "database_name", pg.Name)
 			environment.Status.Errors = append(environment.Status.Errors, fmt.Sprintf("Failed to get PostgresqlDatabase %s: %v", pg.Name, err))
 			hasError = true
 			continue
 
 		} else {
-			// ⭐ CHANGEMENT 2: Existe déjà = OK, pas une erreur
 			logger.Info("PostgresqlDatabase already exists", "database_name", pg.Name)
 		}
 	}
@@ -129,7 +126,6 @@ func (r *EnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		logger.Error(err, "unable to update Environment status")
 	}
 
-	// ⭐ CHANGEMENT 3: Requeue si erreur
 	if hasError {
 		return ctrl.Result{RequeueAfter: time.Second * 30}, nil
 	}
