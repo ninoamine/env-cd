@@ -31,6 +31,7 @@ import (
 type PostgresqlDatabaseReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	pgConfig *PostgresqlConfiguration
 }
 
 // +kubebuilder:rbac:groups=core.envcd.io,resources=postgresqldatabases,verbs=get;list;watch;create;update;patch;delete
@@ -47,9 +48,12 @@ type PostgresqlDatabaseReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
 func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var postgresqlDatabase corev1alpha1.PostgresqlDatabase
+
+
+
 
 	return ctrl.Result{}, nil
 }
