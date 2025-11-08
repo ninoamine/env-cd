@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 
+	"golang.org/x/tools/go/cfg"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,6 +61,11 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *PostgresqlDatabaseReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	cfg, err := LoadPostgresqlConfiguration()
+	if err != nil {
+		return err
+	}
+	r.pgConfig = cfg
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1alpha1.PostgresqlDatabase{}).
 		Named("postgresqldatabase").
