@@ -19,17 +19,20 @@ package controller
 import (
 	"context"
 
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	corev1alpha1 "github.com/ninoamine/env-cd/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"regexp"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"net/url"
 )
 
 // PostgresqlDatabaseReconciler reconciles a PostgresqlDatabase object
@@ -43,7 +46,6 @@ type PostgresqlDatabaseReconciler struct {
 // +kubebuilder:rbac:groups=core.envcd.io,resources=postgresqldatabases,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.envcd.io,resources=postgresqldatabases/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core.envcd.io,resources=postgresqldatabases/finalizers,verbs=update
-
 
 const databaseFinalizer = "finalizer.postgresqldatabase.core.envcd.io"
 
@@ -93,8 +95,6 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 	return ctrl.Result{}, nil
 }
 
-
-
 func (r *PostgresqlDatabaseReconciler) deleteDatabase(ctx context.Context, dbName string) error {
 	if !validIdentifier.MatchString(dbName) {
 		return fmt.Errorf("invalid database name: %s", dbName)
@@ -108,7 +108,6 @@ func (r *PostgresqlDatabaseReconciler) deleteDatabase(ctx context.Context, dbNam
 
 	return nil
 }
-
 
 var validIdentifier = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
@@ -136,7 +135,6 @@ func (r *PostgresqlDatabaseReconciler) createDatabase(ctx context.Context, dbNam
 	return nil
 }
 
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *PostgresqlDatabaseReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	cfg, err := LoadPostgresqlConfiguration()
@@ -145,9 +143,11 @@ func (r *PostgresqlDatabaseReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	}
 	r.pgConfig = cfg
 
+	escaped_password := url.QueryEscape(r.pgConfig.Password)
+
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s",
 		r.pgConfig.User,
-		r.pgConfig.Password,
+		escaped_password,
 		r.pgConfig.Host,
 		r.pgConfig.Port,
 		r.pgConfig.Database,
@@ -159,9 +159,15 @@ func (r *PostgresqlDatabaseReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	}
 	r.pgPool = pool
 
+	if err := mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
+		<-ctx.Done() // Attendre le signal de shutdown
+		r.pgPool.Close()
+		return nil
+	})); err != nil {
+		return fmt.Errorf("unable to add PostgreSQL cleanup runnable: %v", err)
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1alpha1.PostgresqlDatabase{}).
 		Named("postgresqldatabase").
 		Complete(r)
 }
-
