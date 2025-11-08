@@ -62,7 +62,11 @@ apiVersion: core.envcd.io/v1alpha1
 kind: Environment
 metadata:
   name: dev-env
-spec: {}
+spec:
+  databases:
+    postgresqls:
+      - name: user-db
+      - name: orders-db
 ```
 ```bash
 kubectl apply -f config/samples/core_v1alpha1_environment.yaml
