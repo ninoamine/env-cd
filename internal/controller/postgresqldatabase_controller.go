@@ -19,13 +19,13 @@ package controller
 import (
 	"context"
 
-	"golang.org/x/tools/go/cfg"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	corev1alpha1 "github.com/ninoamine/env-cd/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 // PostgresqlDatabaseReconciler reconciles a PostgresqlDatabase object
@@ -51,7 +51,19 @@ type PostgresqlDatabaseReconciler struct {
 func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
+	logger.Info("Connecting to Postgresql", "host", r.pgConfig.Host, "port", r.pgConfig.Port, "user", r.pgConfig.User, "database", r.pgConfig.Database)
+
 	var postgresqlDatabase corev1alpha1.PostgresqlDatabase
+	if err := r.Get(ctx, req.NamespacedName, &postgresqlDatabase); err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("PostgresqlDatabase deleted", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Failed to get PostgresqlDatabase")
+		return ctrl.Result{}, err
+	}
+
+	logger.Info("Reconciled PostgresqlDatabase", "name", postgresqlDatabase.Name, "namespace", postgresqlDatabase.Namespace)
 
 
 
