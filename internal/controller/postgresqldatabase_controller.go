@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 
-
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,10 +28,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	corev1alpha1 "github.com/ninoamine/env-cd/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"net/url"
 	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"net/url"
 )
 
 // PostgresqlDatabaseReconciler reconciles a PostgresqlDatabase object
@@ -109,7 +108,7 @@ func (r *PostgresqlDatabaseReconciler) deleteDatabase(ctx context.Context, dbNam
 	return nil
 }
 
-var validIdentifier = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+var validIdentifier = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`)
 
 func (r *PostgresqlDatabaseReconciler) createDatabase(ctx context.Context, dbName string) error {
 	if !validIdentifier.MatchString(dbName) {
