@@ -59,17 +59,19 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, err
 	}
 
-	// --- Cas 1 : suppression ---
 	if !dbRes.ObjectMeta.DeletionTimestamp.IsZero() {
 		logger.Info("PostgresqlDatabase is being deleted", "name", dbRes.Name)
 
 		if controllerutil.ContainsFinalizer(&dbRes, databaseFinalizer) {
-			// Supprime la DB PostgreSQL
 			if err := r.deleteDatabase(ctx, dbRes.Name); err != nil {
+				dbRes.Status.Status = "DeleteFailed"
+				_ = r.Status().Update(ctx, &dbRes)
 				return ctrl.Result{}, err
 			}
 
-			// Retire le finalizer pour autoriser la suppression du CR
+			dbRes.Status.Status = "Deleted"
+			_ = r.Status().Update(ctx, &dbRes)
+
 			controllerutil.RemoveFinalizer(&dbRes, databaseFinalizer)
 			if err := r.Update(ctx, &dbRes); err != nil {
 				return ctrl.Result{}, err
@@ -78,7 +80,6 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, nil
 	}
 
-	// --- Cas 2 : création ou mise à jour ---
 	if !controllerutil.ContainsFinalizer(&dbRes, databaseFinalizer) {
 		controllerutil.AddFinalizer(&dbRes, databaseFinalizer)
 		if err := r.Update(ctx, &dbRes); err != nil {
@@ -88,8 +89,12 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	logger.Info("Ensuring PostgreSQL database exists", "name", dbRes.Name)
 	if err := r.createDatabase(ctx, dbRes.Name); err != nil {
+		dbRes.Status.Status = "Error"
+		_ = r.Status().Update(ctx, &dbRes)
 		return ctrl.Result{}, err
 	}
+	dbRes.Status.Status = "Ready" 
+	_ = r.Status().Update(ctx, &dbRes)
 
 	return ctrl.Result{}, nil
 }
