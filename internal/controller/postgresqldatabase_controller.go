@@ -69,9 +69,6 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 				return ctrl.Result{}, err
 			}
 
-			dbRes.Status.Status = "Deleted"
-			_ = r.Status().Update(ctx, &dbRes)
-
 			controllerutil.RemoveFinalizer(&dbRes, databaseFinalizer)
 			if err := r.Update(ctx, &dbRes); err != nil {
 				return ctrl.Result{}, err
@@ -93,7 +90,7 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 		_ = r.Status().Update(ctx, &dbRes)
 		return ctrl.Result{}, err
 	}
-	dbRes.Status.Status = "Ready" 
+	dbRes.Status.Status = "Ready"
 	_ = r.Status().Update(ctx, &dbRes)
 
 	return ctrl.Result{}, nil
