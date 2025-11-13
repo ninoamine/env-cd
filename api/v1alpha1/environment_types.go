@@ -25,15 +25,20 @@ import (
 
 // EnvironmentSpec defines the desired state of Environment.
 type EnvironmentSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
 	// object of the databases to be created in the environment
 	Databases DatabaseSpec `json:"databases,omitempty"`
+	Topics  []TopicSpec `json:"topics,omitempty"`
+	
 }
 
 type DatabaseSpec struct {
 	Postgresql []PostgresqlsDatabase `json:"postgresqls,omitempty"`
+}
+
+type TopicSpec struct {
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
 }
 
 type PostgresqlsDatabase struct {
@@ -51,7 +56,6 @@ type EnvironmentStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`,description="Current status of the environment"
-// +kubebuilder:printcolumn:name="Error",type=string,JSONPath=`.status.errors[0]`,description="First error message if any"
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Environment is the Schema for the environments API.

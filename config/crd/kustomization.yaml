@@ -4,6 +4,7 @@
 resources:
 - bases/core.envcd.io_environments.yaml
 - bases/core.envcd.io_postgresqldatabases.yaml
+- bases/core.envcd.io_kafkatopics.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:
