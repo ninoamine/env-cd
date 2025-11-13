@@ -26,4 +26,13 @@ resources:
   kind: PostgresqlDatabase
   path: github.com/ninoamine/env-cd/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: envcd.io
+  group: core
+  kind: KafkaTopic
+  path: github.com/ninoamine/env-cd/api/v1alpha1
+  version: v1alpha1
 version: "3"

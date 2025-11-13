@@ -19,10 +19,6 @@ spec:
       jsonPath: .status.status
       name: Status
       type: string
-    - description: First error message if any
-      jsonPath: .status.errors[0]
-      name: Error
-      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -64,6 +60,15 @@ spec:
                       type: object
                     type: array
                 type: object
+              topics:
+                items:
+                  properties:
+                    name:
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
             type: object
           status:
             description: EnvironmentStatus defines the observed state of Environment.

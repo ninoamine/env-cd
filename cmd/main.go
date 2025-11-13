@@ -156,6 +156,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "PostgresqlDatabase")
 		os.Exit(1)
 	}
+	if err = (&controller.KafkaTopicReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "KafkaTopic")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
