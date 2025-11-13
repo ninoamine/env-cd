@@ -22,14 +22,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"fmt"
+	"time"
+
 	corev1alpha1 "github.com/ninoamine/env-cd/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 // EnvironmentReconciler reconciles a Environment object
@@ -42,33 +44,37 @@ type EnvironmentReconciler struct {
 // +kubebuilder:rbac:groups=core.envcd.io,resources=environments/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core.envcd.io,resources=environments/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Environment object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
+const environmentFinalizer = "finalizer.environment.core.envcd.io"
+
 func (r *EnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
 	var environment corev1alpha1.Environment
 	if err := r.Get(ctx, req.NamespacedName, &environment); err != nil {
 		if errors.IsNotFound(err) {
-			logger.Info("Environment deleted", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{}, nil
 		}
-		logger.Error(err, "Failed to get Environment")
 		return ctrl.Result{}, err
 	}
 
-	logger.Info("Reconciling Environment",
-		"name", environment.Name,
-		"namespace", environment.Namespace,
-		"status", environment.Status.Status,
-	)
+	if !environment.ObjectMeta.DeletionTimestamp.IsZero() {
+		logger.Info("Environment is being deleted", "name", environment.Name)
+
+		if controllerutil.ContainsFinalizer(&environment, environmentFinalizer) {
+			controllerutil.RemoveFinalizer(&environment, environmentFinalizer)
+			if err := r.Update(ctx, &environment); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(&environment, environmentFinalizer) {
+		controllerutil.AddFinalizer(&environment, environmentFinalizer)
+		if err := r.Update(ctx, &environment); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	environment.Status.Errors = []string{}
 	hasError := false
