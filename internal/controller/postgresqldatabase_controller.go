@@ -54,7 +54,7 @@ func (r *PostgresqlDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.R
 	var dbRes corev1alpha1.PostgresqlDatabase
 	if err := r.Get(ctx, req.NamespacedName, &dbRes); err != nil {
 		if errors.IsNotFound(err) {
-			return ctrl.Result{}, nil // CR déjà supprimé
+			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
 	}
